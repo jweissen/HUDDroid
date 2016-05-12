@@ -10,7 +10,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ProgressHUD.show(this, "message", true, false, null);
-
+//        HUDDroid.show(this, "message", MaskType.Black);
+        HUDDroid.showSuccess(this, "It worked!", MaskType.Black, DisplayTime.fromSeconds(2));
     }
 }

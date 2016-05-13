@@ -1,148 +1,100 @@
 package com.example.niners.hudtest;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-////Show a simple status message with an indeterminate spinner
-//AndHUD.Shared.Show(myActivity, "Status Message", MaskType.Clear);
-//
-////Show a progress with a filling circle representing the progress amount
-//        AndHUD.Shared.ShowProgress(myActivity, "Loading… 60%", 60);
-//
-////Show a success image with a message
-//        AndHUD.Shared.ShowSuccess(myActivity, "It Worked!", MaskType.Clear, TimeSpan.FromSeconds(2));
-//
-////Show an error image with a message
-//        AndHUD.Shared.ShowError(myActivity, "It no worked :()", MaskType.Black, TimeSpan.FromSeconds(2));
-//
-////Show a toast, similar to Android native toasts, but styled as AndHUD
-//        AndHUD.Shared.ShowToast(myActivity, "This is a non-centered Toast…", MaskType.Clear, TimeSpan.FromSeconds(2));
-//
-////Show a custom image with text
-//        AndHUD.Shared.ShowImage(myActivity, Resource.Drawable.MyCustomImage, "Custom");
-//
-////Dismiss a HUD that will or will not be automatically timed out
-//        AndHUD.Shared.Dismiss(myActivity);
-//
-////Show a HUD and only close it when it's clicked
-//        AndHUD.Shared.ShowToast(this, "Click this toast to close it!", MaskType.Clear, null, true, () => AndHUD.Shared.Dismiss(this));
+public class HUDDroid {
 
+    private TimeSpan length;
+    private static HUDDroid instance;
+    private Dialog currentDialog;
+    private ProgressWheel progressWheel;
 
-public class HUDDroid extends Dialog {
-
-    private DisplayTime length;
-
-    public HUDDroid(Context context) {
-        super(context);
-    }
-
-    public HUDDroid(Context context, int theme) {
-        super(context, theme);
-    }
-
-
-    public void onWindowFocusChanged(boolean hasFocus){
-        ImageView imageView = (ImageView) findViewById(R.id.spinnerImageView);
-        AnimationDrawable spinner = (AnimationDrawable) imageView.getBackground();
-        if (spinner != null) {
-            spinner.start();
+    public static HUDDroid getInstance() {
+        if (instance == null) {
+            instance = new HUDDroid();
         }
+
+        return instance;
     }
 
-    public void setMessage(CharSequence message) {
-        if(message != null && message.length() > 0) {
-            findViewById(R.id.message).setVisibility(View.VISIBLE);
-            TextView txt = (TextView)findViewById(R.id.message);
-            txt.setText(message);
-            txt.invalidate();
-        }
+    private HUDDroid() {}
+
+    /** Basic builders **/
+
+    public Builder build(Context activityContext) {
+        dismissCurrent();
+
+        currentDialog = buildBasicHUD(activityContext);
+        Builder builder = new Builder();
+        return builder;
     }
 
-    //Show a simple status message with an indeterminate spinner
-    //AndHUD.Shared.Show(myActivity, "Status Message", MaskType.Clear);
-    public static HUDDroid show(Context activityContext, String message, MaskType maskType) {
-        HUDDroid dialog = buildBasicHUD(activityContext)
-                .setMessage(message)
-                .setMaskType(maskType);
+    public Builder buildToast(Context activityContext, String status) {
+        dismissCurrent();
 
-        dialog.show();
-        return dialog;
-    }
-
-    ////Show an error image with a message
-    // AndHUD.Shared.ShowError(myActivity, "It no worked :()", MaskType.Black, TimeSpan.FromSeconds(2));
-    public static HUDDroid showError(Context activityContext, String message, MaskType maskType, DisplayTime length) {
-        HUDDroid dialog = buildBasicHUD(activityContext)
-                .setMaskType(maskType)
-                .setMessage(message)
-                .setDisplayTime(length)
-                .setIcon(IconType.Failure);
-        dialog.show();
-        return dialog;
+        currentDialog = buildToastHUD(activityContext);
+        Builder builder = new Builder().setMessage(status);
+        return builder;
     }
 
 
-    //    AndHUD.Shared.ShowSuccess(myActivity, "It Worked!", MaskType.Clear, TimeSpan.FromSeconds(2));
-    public static HUDDroid showSuccess(Context activityContext, String message, MaskType maskType, DisplayTime length) {
-        HUDDroid dialog = buildBasicHUD(activityContext)
-                .setMaskType(maskType)
-                .setMessage(message)
-                .setDisplayTime(length)
+    /** Convenience builders **/
+
+    public Builder build(Context activityContext, int progress) {
+        return build(activityContext)
+                .setIcon(IconType.Progress)
+                .setProgress(progress);
+    }
+
+    public Builder buildSuccess(Context activityContext) {
+        return build(activityContext)
                 .setIcon(IconType.Success);
-        dialog.show();
-        return dialog;
     }
 
-
-    public static HUDDroid show(Context context, CharSequence message, boolean indeterminate, boolean cancelable,
-                                OnCancelListener cancelListener) {
-        HUDDroid dialog = new HUDDroid(context,R.style.ProgressHUD);
-        dialog.setTitle("");
-        dialog.setContentView(R.layout.progress_hud);
-        if(message == null || message.length() == 0) {
-            dialog.findViewById(R.id.message).setVisibility(View.GONE);
-        } else {
-            TextView txt = (TextView)dialog.findViewById(R.id.message);
-            txt.setText(message);
-        }
-        dialog.setCancelable(cancelable);
-        dialog.setOnCancelListener(cancelListener);
-        dialog.getWindow().getAttributes().gravity=Gravity.CENTER;
-        WindowManager.LayoutParams lp = dialog.getWindow().getAttributes();
-        lp.dimAmount=0.2f;
-        dialog.getWindow().setAttributes(lp);
-        //dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
-        dialog.show();
-        return dialog;
+    public Builder buildFailure(Context activityContext) {
+        return build(activityContext)
+                .setIcon(IconType.Failure);
     }
 
-
-    /** overrides **/
-    @Override
-    public void show() {
-        super.show();
-        if (length != null) {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    HUDDroid.this.dismiss();
-                }
-            }, length.millis);
-        }
+    public Builder buildSuccessWithStatus(Context activityContext, String status) {
+        return build(activityContext)
+                .setIcon(IconType.Success)
+                .setMessage(status);
     }
+
+    public Builder buildFailureWithStatus(Context activityContext, String status) {
+        return build(activityContext)
+                .setIcon(IconType.Failure)
+                .setMessage(status);
+    }
+
+    public Builder buildImage(Context activityContext, int resId) {
+        return build(activityContext)
+                .setIcon(IconType.Custom, resId);
+    }
+
+    public Builder buildImage(Context activityContext, Drawable drawable) {
+        return build(activityContext)
+                .setIcon(IconType.Custom, drawable);
+    }
+
 
     /** internal builder methods **/
 
-    private static HUDDroid buildBasicHUD(Context activityContext) {
-        HUDDroid dialog = new HUDDroid(activityContext, R.style.ProgressHUD);
+    private Dialog buildBasicHUD(Context activityContext) {
+        Dialog dialog = new Dialog(activityContext, R.style.ProgressHUD);
         dialog.setTitle("");
         dialog.setContentView(R.layout.progress_hud);
 
@@ -150,53 +102,147 @@ public class HUDDroid extends Dialog {
         return dialog;
     }
 
-    private HUDDroid setMessage(String message) {
-        if(message == null || message.length() == 0) {
-            this.findViewById(R.id.message).setVisibility(View.GONE);
-        } else {
-            TextView txt = (TextView)findViewById(R.id.message);
-            txt.setText(message);
+    private static Dialog buildToastHUD(Context activityContext) {
+        Dialog dialog = new Dialog(activityContext, R.style.ProgressHUD);
+        dialog.setTitle("");
+        dialog.setContentView(R.layout.toast_hud);
+
+        dialog.getWindow().getAttributes().gravity=Gravity.CENTER;
+        return dialog;
+    }
+
+
+    /** util **/
+
+    public void dismissCurrent() {
+        if (currentDialog != null && currentDialog.isShowing()) {
+            currentDialog.dismiss();
+
+            currentDialog = null;
+            progressWheel = null;
+            length = null;
         }
 
-        return this;
     }
 
-    private HUDDroid setMaskType(MaskType maskType) {
-
-        float dimAmount = 0.0f;
-
-        if (maskType == MaskType.Black) {
-            dimAmount = 0.7f;
+    public void updateProgress(int progress) {
+        if (currentDialog == null || progressWheel == null) {
+            return;
         }
 
-        WindowManager.LayoutParams lp = getWindow().getAttributes();
-        lp.dimAmount= dimAmount;
-        getWindow().setAttributes(lp);
-
-        return this;
+        progressWheel.setProgress(progress);
     }
 
-    private HUDDroid setDisplayTime(DisplayTime time) {
-        length = time;
-        return this;
-    }
+    /** internal builder class **/
 
-    private HUDDroid setIcon(IconType type) {
-        ImageView icon = (ImageView) findViewById(R.id.spinnerImageView);
+    class Builder {
 
-        switch (type) {
-            case Success:
-                icon.setImageResource(R.drawable.ic_successstatus);
-                break;
-            case Failure:
-                icon.setImageResource(R.drawable.ic_errorstatus);
-                break;
-            case Progress_Indeterminant:
-                icon.setImageResource(R.drawable.progress_hud_bg);
+        private Builder() { }
 
+        public Builder setMessage(String message) {
+            if(message == null || message.length() == 0) {
+                currentDialog.findViewById(R.id.message).setVisibility(View.GONE);
+            } else {
+                TextView txt = (TextView)currentDialog.findViewById(R.id.message);
+                txt.setText(message);
+            }
+            return this;
         }
 
-        return this;
+        public Builder setMaskType(MaskType maskType) {
+
+            float dimAmount = 0.0f;
+
+            if (maskType == MaskType.Black) {
+                dimAmount = 0.7f;
+            }
+
+            WindowManager.LayoutParams lp = currentDialog.getWindow().getAttributes();
+            lp.dimAmount= dimAmount;
+            currentDialog.getWindow().setAttributes(lp);
+
+            return this;
+        }
+
+        public Builder setTimeSpan(TimeSpan time) {
+            length = time;
+            return this;
+        }
+
+
+        private Builder setProgress(int progress) {
+            progressWheel.setProgress(progress);
+            return this;
+        }
+
+        private Builder setIcon(IconType type) {
+            return setIcon(type, -1, null);
+        }
+
+        private Builder setIcon(IconType type, Drawable drawable) {
+            return setIcon(type, -1, drawable);
+        }
+
+        private Builder setIcon(IconType type, int resId) {
+            return setIcon(type, resId, null);
+        }
+
+        private Builder setIcon(IconType type, int resId, Drawable drawable) {
+            ImageView icon = (ImageView) currentDialog.findViewById(R.id.spinnerImageView);
+            progressWheel = (ProgressWheel) currentDialog.findViewById(R.id.progressWheel);
+
+            icon.setVisibility(View.VISIBLE);
+
+            switch (type) {
+                case Success:
+                    icon.setImageResource(R.drawable.ic_successstatus);
+                    break;
+                case Failure:
+                    icon.setImageResource(R.drawable.ic_errorstatus);
+                    break;
+                case Progress_Indeterminant:
+                    progressWheel.isSpinning = true;
+                case Progress:
+                    progressWheel.setVisibility(View.VISIBLE);
+                    icon.setVisibility(View.GONE);
+                    break;
+                case Custom:
+                    if (resId != -1) {
+                        icon.setImageResource(resId);
+                    } else if (drawable != null) {
+                        icon.setImageDrawable(drawable);
+                    }
+            }
+
+            return this;
+        }
+
+
+
+        public Dialog show() {
+            currentDialog.show();
+
+            if (length != null) {
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((Activity)currentDialog.getContext()).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                dismissCurrent();
+                            }
+                        });
+                    }
+                }, length.millis);
+            }
+
+            return currentDialog;
+        }
+
     }
+
+
+
+
 
 }

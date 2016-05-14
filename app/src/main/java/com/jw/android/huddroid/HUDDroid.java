@@ -1,13 +1,9 @@
-package com.example.niners.hudtest;
+package com.jw.android.huddroid;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
-import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -37,7 +33,7 @@ public class HUDDroid {
         dismissCurrent();
 
         currentDialog = buildBasicHUD(activityContext);
-        Builder builder = new Builder();
+        Builder builder = new Builder().setIcon(IconType.Progress_Indeterminant);
         return builder;
     }
 
@@ -192,6 +188,7 @@ public class HUDDroid {
             progressWheel = (ProgressWheel) currentDialog.findViewById(R.id.progressWheel);
 
             icon.setVisibility(View.VISIBLE);
+            progressWheel.setVisibility(View.GONE);
 
             switch (type) {
                 case Success:
@@ -201,7 +198,7 @@ public class HUDDroid {
                     icon.setImageResource(R.drawable.ic_errorstatus);
                     break;
                 case Progress_Indeterminant:
-                    progressWheel.isSpinning = true;
+                    progressWheel.spin();
                 case Progress:
                     progressWheel.setVisibility(View.VISIBLE);
                     icon.setVisibility(View.GONE);
@@ -226,12 +223,7 @@ public class HUDDroid {
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        ((Activity)currentDialog.getContext()).runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                dismissCurrent();
-                            }
-                        });
+                        dismissCurrent();
                     }
                 }, length.millis);
             }

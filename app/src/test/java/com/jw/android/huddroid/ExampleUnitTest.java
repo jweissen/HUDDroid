@@ -1,4 +1,4 @@
-package com.example.niners.hudtest;
+package com.jw.android.huddroid;
 
 import org.junit.Test;
 

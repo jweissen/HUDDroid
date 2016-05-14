@@ -1,4 +1,4 @@
-package com.example.niners.hudtest;
+package com.jw.android.huddroid;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewTreeObserver;
 
 /**
  * Created by Jon Weissenburger on 5/12/16.
@@ -69,20 +70,16 @@ public class ProgressWheel extends View {
             }
         });
 
-        this.addOnAttachStateChangeListener(new OnAttachStateChangeListener() {
+
+        getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
-            public void onViewAttachedToWindow(View v) {
+            public boolean onPreDraw() {
+                getViewTreeObserver().removeOnPreDrawListener(this);
                 setupBounds();
                 setupPaints();
-                ProgressWheel.this.removeOnAttachStateChangeListener(this);
-            }
-
-            @Override
-            public void onViewDetachedFromWindow(View v) {
-
+                return false;
             }
         });
-
 
 
         //ParseAttributes(context.ObtainStyledAttributes(attrs, null)); //TODO: swap null for R.styleable.ProgressWheel

@@ -1,4 +1,4 @@
-package com.example.niners.hudtest;
+package com.jw.android.huddroid;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

@@ -21,11 +21,41 @@ HUDDroid.getInstance().buildSuccess(this)
   .setTimeSpan(TimeSpan.fromSeconds(2))
   .show();
 
+//Show a success image with a message
+HUDDroid.getInstance().buildSuccessWithStatus(this, "It Worked!")
+  .setMaskType(MaskType.Black)
+  .setTimeSpan(TimeSpan.fromSeconds(2))
+  .show();
+
+
 //Show an error image with a message
 HUDDroid.getInstance().buildFailureWithStatus(this, "It no worked :()")
   .setMaskType(MaskType.Black)
   .setTimeSpan(TimeSpan.fromSeconds(2))
   .show();
 
+//Show a toast, similar to Android native toasts, but styled
+HUDDroid.getInstance().buildToast(this, "This is a non-centered Toast...")
+    .setMaskType(MaskType.Clear)
+    .setTimeSpan(TimeSpan.fromSeconds(2))
+    .show();
+
+//Show a custom image with text
+HUDDroid.getInstance().buildImage(this, R.drawable.customImage)
+    .setMessage("Custom")
+    .show();
+
+//Dismiss a HUD that will or will not be automatically timed out
+HUDDroid.getInstance().dismissCurrent();
+    
+//Show a HUD and only close it when it's clicked
+HUDDroid.getInstance().buildToast(this, "Click this toast to close it!")
+  .setMaskType(MaskType.Clear)
+  .setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+      HUDDroid.getInstance().dismissCurrent();
+    }
+  }).show();
 
 ```
